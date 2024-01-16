@@ -1,0 +1,219 @@
+﻿@page "/projects/edit/{ProjectId:int}"
+<PageTitle>Dodaj projekt</PageTitle>
+
+@using Cms.Application.CQRS.Commands.FileMetadata
+@using Cms.Application.CQRS.Commands.Project
+@using Cms.Application.CQRS.Queries.FileMetadataQuery
+@using Cms.Application.CQRS.Queries.ProjectQuery
+@using Cms.Application.DTO
+@using Cms.Application.DataModules.DTO
+@using Cms.Application.Interfaces
+@using System.Net.Http.Headers
+@inject IFileHandlerService fileHandlerService
+@inject IProjectService projectService
+@inject IJSRuntime JsRuntime
+@inject NavigationManager navigationManager
+
+<div style="background-color: white; border-radius: 10px; padding: 20px; box-shadow: 0 0 .875rem #29304314">
+    <h5 style="color: #495057">Edytowanie projektu</h5>
+    <EditForm Model="@updateProjectCommand" class="mt-4" OnValidSubmit="@UpdateAsync">
+        <DataAnnotationsValidator />
+        <div class="mb-3 form-floating">
+            <InputText id="Title" @bind-Value="updateProjectCommand.Title" class="form-control form-control-sm" placeholder="Nazwa projektu" />
+
+            <label class="mb-1" style="color: #6C757D;" for="Title">Nazwa projektu</label>
+            <ValidationMessage For="() => updateProjectCommand.Title" />
+        </div>
+        <div class="mb-3 form-floating">
+            <InputTextArea id="Description" @bind-Value="updateProjectCommand.Description" class="form-control form-control-sm" placeholder="Opis projektu" style="height: 250px;" />
+            <label class="mb-1" style="color: #6C757D;" for="Description">Opis</label>
+            <ValidationMessage For="() => updateProjectCommand.Description" />
+        </div>
+        <div class="form-group">
+            <label class="mb-1" style="color: #6C757D;" for="Files">Zdjęcia projektu</label>
+            <InputFile multiple="true" OnChange="@OnFileSelect" id="Files" class="form-control form-control-sm hidden" accept=".png,.jpg,.jpeg" />
+        </div>
+        <div class="d-flex">
+            @if (isLoading)
+            {
+                <span class="d-block mt-2">Trwa ładowanie zdjęć</span>
+            }
+            else if (temporaryFileURI?.Any() == true || projectDTO.Images?.Any() == true)
+            {
+                <div class="d-flex gap-2 w-100" style="padding: 20px; border-left: 1px solid #ced4da; border-right: 1px solid #ced4da; border-bottom: 1px solid #ced4da; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;">
+                    @foreach (var item in projectDTO.Images)
+                    {
+                        <div class="d-inline-block text-center" style="width: 100px; height: 100px; position: relative;">
+                            <img src="@item.ImageUrl" alt="Project image preview" width="100" height="100" style="opacity: 0.7" />
+                            <span style="position:absolute; top: 10px; right: 10px; color: red; font-size: 17px; cursor: pointer;" class="oi oi-trash" @onclick="() => DeleteFileFromProject(item.ProjectImageId)"></span>
+                        </div>
+                    }
+                    @foreach (var item in temporaryFileURI)
+                    {
+                        <div class="d-inline-block text-center" style="width: 100px; height: 100px; position: relative;">
+                            <img src="@item" alt="Project image preview" width="100" height="100" style="opacity: 0.7" />
+                            <span style="position:absolute; top: 10px; right: 10px; color: red; font-size: 17px; cursor: pointer;" class="oi oi-trash" @onclick="() => RemoveFileAtIndex(temporaryFileURI.IndexOf(item))"></span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Zapisz</button>
+    </EditForm>
+</div>
+@code {
+    [Parameter]
+    public int ProjectId { get; set; }
+
+    private UpdateProjectCommand updateProjectCommand = new();
+
+    private ProjectDTO projectDTO = new()
+    {
+        Images = new List<ProjectImageDTO>()
+    };
+
+    private bool isLoading;
+    private int maxAllowedFiles = int.MaxValue;
+    private long maxFileSize = long.MaxValue;
+
+    private List<IBrowserFile> imageFiles = new();
+    private List<ExtendedFileMetadataDTO> filesMetadata = new();
+    private List<string> temporaryFileURI = new();
+
+    private List<string> errors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        projectDTO = await projectService.GetProjectByIdAsync(ProjectId);
+
+        if (projectDTO != null)
+        {
+            updateProjectCommand.ProjectId = ProjectId;
+            updateProjectCommand.Title = projectDTO.Title;
+            updateProjectCommand.Description = projectDTO.Description;
+        }
+    }
+
+    private async Task UpdateAsync()
+    {
+        if (imageFiles != null && imageFiles.Any())
+        {
+            filesMetadata.Clear();
+
+            foreach (var file in imageFiles)
+            {
+                await UploadFileAsync(file);
+            }
+        }
+
+        updateProjectCommand.ImageFilesMetadata = filesMetadata;
+
+        await projectService.UpdateProjectAsync(updateProjectCommand);
+
+        navigationManager.NavigateTo("/projects/edit/" + updateProjectCommand.ProjectId, true);
+    }
+
+    private async Task OnFileSelect(InputFileChangeEventArgs args)
+    {
+        isLoading = true;
+
+        try
+        {
+            foreach (var file in args.GetMultipleFiles(maxAllowedFiles))
+            {
+                imageFiles.Add(file);
+
+                var temporaryImage = await file.RequestImageFileAsync("image/jpg", 200, 200);
+
+                using Stream tempImageStream = temporaryImage.OpenReadStream(maxFileSize);
+
+                using MemoryStream ms = new();
+                await tempImageStream.CopyToAsync(ms);
+
+                temporaryFileURI.Add($"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}");
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        isLoading = false;
+    }
+
+    private async Task UploadFileAsync(IBrowserFile file)
+    {
+        if (file == null)
+        {
+            throw new ArgumentNullException("File not found");
+        }
+
+        if (file.Size > maxFileSize)
+        {
+            return;
+        }
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+
+            var uploadFileDTO = new UploadFileDTO()
+                {
+                    FileName = file.Name,
+                    ContentType = file.ContentType,
+                    FileSize = file.Size,
+                    Content = memoryStream.ToArray(),
+                };
+
+            var uploadOptionsDTO = new FileUploadOptionsDTO
+                {
+                    Code = FilePathCodeEnum.PROJECT
+                };
+
+            var uploadResult = await fileHandlerService.UploadFileAsync(uploadFileDTO, uploadOptionsDTO);
+
+            if (uploadResult != null && uploadResult.IsSuccess)
+            {
+                var createResult = await fileHandlerService.CreateFileMetadataAsync(new CreateFileMetadataCommand()
+                    {
+                        FileName = file.Name,
+                        ContentType = file.ContentType,
+                        FileSize = file.Size,
+                        FileFullPath = uploadResult.FileFullPath,
+                        FileRelativePath = uploadResult.FileRelativePath,
+                        FileExtension = Path.GetExtension(uploadResult.FileRelativePath)
+                    });
+
+                if (createResult != null)
+                {
+                    filesMetadata.Add(createResult);
+                }
+            }
+            else
+            {
+                errors.Add(uploadResult?.ErrorMessage ?? "There was an error during file upload. Try again.");
+            }
+        }
+        catch (Exception ex)
+        {
+            errors.Add(ex.Message);
+        }
+    }
+
+    private void RemoveFileAtIndex(int index)
+    {
+        temporaryFileURI.RemoveAt(index);
+        imageFiles.RemoveAt(index);
+    }
+
+    private async Task DeleteFileFromProject(int projectImageId)
+    {
+        bool deleteConfirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Czy chcesz usunąć istniejące zdjęcie z projektu?");
+        if (deleteConfirmed)
+        {
+            await projectService.DeleteProjectImageAsync(projectImageId);
+            projectDTO.Images.Remove(projectDTO.Images.FirstOrDefault(x => x.ProjectImageId == projectImageId));
+        }
+    }
+}

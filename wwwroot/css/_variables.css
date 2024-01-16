@@ -1,0 +1,7 @@
+body {
+  --primary-color: #1861ac;
+  --primary-hover-color: #2972bd;
+  --seccondary-color: #30C2E3;
+  --seccondary-hover-color: #5196DB;
+  --dangerous-color: #F0250F;
+}

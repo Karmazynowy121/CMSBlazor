@@ -1,0 +1,140 @@
+@page "/blog"
+
+@using Cms.Web.Components.Buttons
+@using Cms.Web.Components
+@using DataModels;
+@using Cms.Application.Interfaces
+
+@inject NavigationManager navigator
+@inject IBlogService blogService
+@inject IJSRuntime js
+
+
+<PageHeader TextValue="Blog" />
+
+<ButtonContainer>
+    <MainBtn TextValue="Utwórz nowy blog" OnClickHandler="CreateNewBlog" />
+</ButtonContainer>
+
+<CmsDataTable>
+    <thead class="text-uppercase">
+        <tr>
+            <th scope="col" class="">ID</th>
+            <th scope="col" class="">Tutuł</th>
+            <th scope="col" class="">Data publikacji</th>
+            <th scope="col" class="">Akcje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var blog in blogPosts.OrderBy(x => x.BlogPostId))
+        {
+            <tr name="@blog.BlogPostId" class="table-element">
+                <td @onclick="() => ToggleTableElement(blog.BlogPostId)" colspan="0">@blog.BlogPostId</td>
+                <td @onclick="() => ToggleTableElement(blog.BlogPostId)" colspan="0">@blog.Title</td>
+                <td @onclick="() => ToggleTableElement(blog.BlogPostId)" colspan="0">@blog.PublishDate</td>
+                <td class="action-col">
+                    <a role="button" class="link details">
+                        <span style="color: #3F80EA" class="oi oi-pencil me-2"></span>
+                    </a>
+                    <a role="button" class="link edit">
+                        <span style="color:#D2691E" class="oi oi-info"></span>
+                    </a>
+                    <a role="button" class="link delete" @onclick="() => DeleteBlogPostAsync(blog.BlogPostId)">
+                        <span style="color: #D9534F" class="oi oi-trash"></span>
+                    </a>
+                </td>
+            </tr>
+            <tr class="hide-table-container">
+
+                    <td class="hide-table-td-container" colspan="4">
+                        <div name="@blog.BlogPostId" class="collapse in">
+                             <table class="table">
+                                <thead class="text-uppercase">
+                                    <tr class="subtable-header">
+                                        <th scope="col">ID</th>
+                                        <th scope="col">URL</th>
+                                    </tr>
+                                </thead>
+                                 <tbody>
+                                @if(blog.Images != null)
+                                {                                   
+                                    @foreach (var image in blog.Images.OrderBy(x => x.BlogPostImageId))
+                                        {
+                                            <tr>
+                                                <td class="text-uppercase">@image.BlogPostImageId</td>
+                                                <td>@image.ImageUrl</td>
+                                                <td class="action-col">
+                                                    <a role="button" class="link delete" >Usuń</a>
+                                                </td>
+                                            </tr>
+                                        }
+                                }
+                                 </tbody>
+                             </table>
+                        </div>
+                    </td>
+                </tr>
+        }
+    </tbody>
+</CmsDataTable>
+
+<style>
+    .action-col {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+
+    .link i {
+        margin-right: 3px; 
+    }
+</style>
+
+@code{
+
+    private List<BlogPostViewModel> blogPosts = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetBlogDataAsync();
+        }
+    }
+
+    private async Task GetBlogDataAsync()
+    {
+        var blogs = await blogService.GetAllBlogPostsAsync();
+        if (blogs is not null)
+        {
+            blogPosts = blogs.Select(b => new BlogPostViewModel() {
+                BlogPostId = b.BlogPostId,
+                Title = b.Title,
+                Content = b.Content,
+                PublishDate = b.PublishDate, 
+                Images = b.Images?.Select(i => new BlogPostImageViewModel() {
+                    BlogPostImageId = i.BlogPostImageId,
+                    ImageUrl = i.ImageUrl
+                }).ToList()
+            }).ToList();
+
+            this.StateHasChanged();
+        }
+    }
+
+    private void CreateNewBlog()
+    {
+        navigator.NavigateTo("/blog/create");
+    }
+
+    private async Task DeleteBlogPostAsync(int blogPostId)
+    {
+        await blogService.DeleteBlogPostAsync(blogPostId);
+    }
+
+    private void ToggleTableElement(int key)
+    {
+        js.InvokeVoidAsync("toggleTableColapse", key);
+        this.StateHasChanged();
+    }
+}

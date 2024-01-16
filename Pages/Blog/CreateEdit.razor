@@ -1,0 +1,138 @@
+@page "/blog/create"
+@page "/blog/edit/{BlogId}"
+
+@using Cms.Web.Components
+@using Cms.Web.Components.Buttons
+@using Cms.Application.Interfaces
+@using Cms.Application.CQRS.Commands.BlogPost
+@using DataModels
+@using Mapster
+
+
+@inject IJSRuntime js
+@inject IBlogService blogService
+
+
+@{
+    var textValue = _blogId == 0 ? "Kreator nowego bloga" : "Edycja bloga";
+    <PageHeader TextValue="@textValue" />
+}
+
+<EditForm Model="@blogPost" OnValidSubmit="OnValidHandler">
+    <div class="mb-3">
+        <label for="blogTitle" class="form-label">Tytuł bloga</label>
+        <InputText class="form-control" id="blogTitle" @bind-Value="@blogPost.Title" />
+    </div>
+    <div class="mb-3">
+        @* <div id="editor"></div> *@
+          
+    </div>
+    <div class="mb-3">
+        <label for="Files" class="form-label">Zdjęcia do bloga</label>
+        <InputFile multiple="true" OnChange="@OnFileSelect" id="Files" class="form-control" accept=".png,.jpg,.jpeg" />
+        @if (isLoading)
+        {
+            <span>Trwa ładowanie zdjęć</span>
+        }
+    </div>
+    <ButtonContainer>
+        <MainBtn ButtonType="submite" TextValue="Utwórz" />
+    </ButtonContainer>
+
+</EditForm>
+
+<TinyMCE.Blazor.Editor Conf="@editorConf" />
+
+@code{
+    [Parameter] public string BlogId { get; set; }
+
+    private List<IBrowserFile> imageFiles = new();
+    private List<Application.DataModules.DTO.FileMetadataDTO> filesMetadata = new();
+    private BlogPostViewModel blogPost = new(); 
+    private int _blogId;
+    private bool isLoading;
+    private string value = "Initial Value";
+
+     private Dictionary<string, object> editorConf = new Dictionary<string, object>{
+        { "menubar", true },
+        { "plugins", "image ImageInsert" },
+        { "toolbar", "undo redo | styleselect | forecolor | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | image | code" },
+        {"automatic_uploads", true },
+        {"image_list", "editor/getuploaded"},
+        {"external_image_list_url", "editor/uploadimage"}
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        int.TryParse(BlogId, out _blogId); 
+
+        if (_blogId != 0) 
+        {
+            var blog = await blogService.GetBlogPostByIdAsync(_blogId);
+            if (blog is not null)
+            {
+                blogPost = blog.Adapt<BlogPostViewModel>();
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            js.InvokeVoidAsync("runEditor");
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+
+        await blogService.CreateBlogPostAsync(new CreateBlogPostCommand(){
+            Title = blogPost.Title,
+            Content = blogPost.Content
+        });
+    }
+
+    private async Task UpdateBlog()
+    {
+        await blogService.UpdateBlogPostAsync(blogPost.Adapt<UpdateBlogPostCommand>());
+    }
+
+    private void OnHtmlContentChanged(string newValue)
+    {
+        blogPost.Content = newValue;
+    }
+
+    private async Task OnValidHandler()
+    {
+        if (_blogId != 0) 
+        {
+            await CreateAsync();
+            return;
+        }
+
+        await UpdateBlog();
+    }
+
+    private async Task OnFileSelect(InputFileChangeEventArgs args)
+    {
+        isLoading = true;
+        imageFiles.Clear();
+
+        try
+        {
+            foreach (var file in args.GetMultipleFiles(int.MaxValue))
+            {
+                imageFiles.Add(file);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message, ex);
+        }
+
+        isLoading = false;
+    }
+
+
+}

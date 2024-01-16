@@ -1,0 +1,67 @@
+﻿@using Cms.Application.DTO
+@using Cms.Application.Interfaces
+
+@inject ICompanyReviewService companyReviewService
+@inject IJSRuntime js
+
+<table class="table" style="margin-bottom: 0">
+    <thead>
+        <tr>
+            <th style="width: 25%; color: #6C757D; border-bottom-color: #DEE6ED; padding-left: 20px;">Treść recenzji</th>
+            <th style="width: 60%; color: #6C757D; border-bottom-color: #DEE6ED; padding-left: 20px;">Zdjęcie</th>
+            <th style="color: #6C757D; border-bottom-color: #DEE6ED; padding-left: 20px;">Operacje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (reviews.Any())
+        {
+            @foreach (var review in reviews)
+            {
+                <tr>
+                    <td style="padding-left: 20px; color: #6C757D;">@review.Content</td>
+                    <td class="table-action" style="padding-left: 20px;">
+
+                    </td>
+                    <td class="table-action" style="padding-left: 20px;">
+                        <a href="/companyreview/edit/@review.CompanyReviewId">
+                            <span style="color: #3F80EA" class="oi oi-pencil me-2"></span>
+                        </a>
+                        <a href="#!" style="cursor: pointer;" @onclick="() => DeleteReviewAsync(review.CompanyReviewId)">
+                            <span style="color: #D9534F" class="oi oi-trash"></span>
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="3" class="text-center">
+                    Brak dodanych recenzji firm
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<CompanyReviewDTO> reviews = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var reviewsList = await companyReviewService.GetAllCompanyReviewsAsync();
+
+        if (reviewsList != null)
+            reviews = reviewsList;
+    }
+
+    private async Task DeleteReviewAsync(int companyReviewId)
+    {
+        bool confirmedDelete = await js.InvokeAsync<bool>("confirm", "Czy chcesz usunąć recenzję?");
+        if (confirmedDelete)
+        {
+            await companyReviewService.DeleteCompanyReviewAsync(companyReviewId);
+            reviews.Remove(reviews.FirstOrDefault(x => x.CompanyReviewId == companyReviewId));
+        }
+    }
+}

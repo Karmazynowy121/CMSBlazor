@@ -1,0 +1,67 @@
+﻿@using Cms.Application.DTO
+@using Cms.Application.Interfaces
+
+@inject IProjectService projectService
+@inject IJSRuntime JsRuntime
+
+<table class="table" style="margin-bottom: 0">
+    <thead>
+        <tr>
+            <th style="width: 25%; color: #6C757D; border-bottom-color: #DEE6ED; padding-left: 20px;">Nazwa projektu</th>
+            <th style="width: 60%; color: #6C757D; border-bottom-color: #DEE6ED; padding-left: 20px;">Opis</th>
+            <th style="color: #6C757D; border-bottom-color: #DEE6ED; padding-left: 20px;">Operacje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (projects.Any())
+        {
+
+
+            @foreach (var project in projects)
+            {
+                <tr>
+                    <td style="padding-left: 20px; color: #6C757D;">@project.Title</td>
+                    <td style="padding-left: 20px; color: #6C757D;">@project.Description</td>
+                    <td class="table-action" style="padding-left: 20px;">
+                        <a href="/projects/edit/@project.ProjectId">
+                            <span style="color: #3F80EA" class="oi oi-pencil me-2"></span>
+
+                        </a>
+                        <a href="#!" style="cursor: pointer;" @onclick="() => DeleteProjectAsync(project.ProjectId)">
+                            <span style="color: #D9534F" class="oi oi-trash"></span>
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="3" class="text-center">
+                    Brak dodanych projektów
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@code {
+    private List<ProjectDTO> projects = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var projectsList = await projectService.GetAllProjectsAsync();
+
+        if (projectsList != null)
+            projects = projectsList;
+    }
+
+    private async Task DeleteProjectAsync(int projectId)
+    {
+        bool confirmedDelete = await JsRuntime.InvokeAsync<bool>("confirm", "Czy chcesz usunąć projekt?");
+        if(confirmedDelete)
+        {
+            await projectService.DeleteProjectAsync(projectId);
+            projects.Remove(projects.FirstOrDefault(x => x.ProjectId == projectId));
+        }
+    }
+}

@@ -1,0 +1,276 @@
+﻿@page "/project/create"
+<PageTitle>Dodaj projekt</PageTitle>
+
+@using Cms.Application.CQRS.Commands.FileMetadata
+@using Cms.Application.CQRS.Commands.Project
+@using Cms.Application.CQRS.Queries.FileMetadataQuery
+@using Cms.Application.CQRS.Queries.ProjectQuery
+@using Cms.Application.DTO
+@using Cms.Application.DataModules.DTO
+@using Cms.Application.Interfaces
+@using System.Net.Http.Headers
+@inject IFileHandlerService fileHandlerService
+@inject IProjectService projectService
+@inject NavigationManager navigationManager
+
+<div style="background-color: white; border-radius: 10px; padding: 20px; box-shadow: 0 0 .875rem #29304314">
+    <h5 style="color: #495057">Dodawanie nowego projektu</h5>
+    <EditForm Model="@createProjectCommand" OnValidSubmit="CreateAsync" class="mt-4">
+        <DataAnnotationsValidator />
+        <div class="mb-3 form-floating">
+            <InputText id="Title" @bind-Value="createProjectCommand.Title" class="form-control form-control-sm" placeholder="Nazwa projektu" />
+
+            <label class="mb-1" style="color: #6C757D;" for="Title">Nazwa projektu</label>
+            <ValidationMessage For="() => createProjectCommand.Title" />
+        </div>
+        <div class="mb-3 form-floating">
+            <InputTextArea id="Description" @bind-Value="createProjectCommand.Description" class="form-control form-control-sm" placeholder="Opis projektu" style="height: 250px;" />
+            <label class="mb-1" style="color: #6C757D;" for="Description">Opis</label>
+            <ValidationMessage For="() => createProjectCommand.Description" />
+        </div>
+        <div class="form-group">
+            <label class="mb-1" style="color: #6C757D;" for="BeforeImage">Zdjęcie przed</label>
+            <InputFile multiple="false" OnChange="@OnBeforeImageSelect" id="BeforeImage" class="form-control form-control-sm hidden" accept=".png,.jpg,.jpeg" />
+            <label class="mb-1" style="color: #6C757D;" for="BeforeImage">Zdjęcie po</label>
+            <InputFile multiple="false" OnChange="@OnAfterImageSelect" id="AfterImage" class="form-control form-control-sm hidden" accept=".png,.jpg,.jpeg" />
+        </div>
+        @if (!string.IsNullOrEmpty(beforeImageTemporaryUri))
+        {
+            <div class="d-inline-block text-center" style="width: 100px; height: 100px; position: relative;">
+                <img src="@beforeImageTemporaryUri" alt="Project image preview" width="100" height="100" style="opacity: 0.7" />
+                <span style="position:absolute; top: 10px; right: 10px; color: red; font-size: 17px; cursor: pointer;" class="oi oi-trash" @onclick="RemoveBefore"></span>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(afterImageTemporaryUri))
+        {
+            <div class="d-inline-block text-center" style="width: 100px; height: 100px; position: relative;">
+                <img src="@afterImageTemporaryUri" alt="Project image preview" width="100" height="100" style="opacity: 0.7" />
+                <span style="position:absolute; top: 10px; right: 10px; color: red; font-size: 17px; cursor: pointer;" class="oi oi-trash" @onclick="RemoveAfter"></span>
+            </div>
+        }
+        <div class="form-group">
+            <label class="mb-1" style="color: #6C757D;" for="Files">Zdjęcia projektu</label>
+            <InputFile multiple="true" OnChange="@OnFileSelect" id="Files" class="form-control form-control-sm hidden" accept=".png,.jpg,.jpeg" />
+        </div>
+        <div class="d-flex">
+            @if (isLoading)
+            {
+                <span class="d-block mt-2">Trwa ładowanie zdjęć</span>
+            }
+            else if (temporaryFileURI.Any())
+            {
+                <div class="d-flex gap-2 w-100" style="padding: 20px; border-left: 1px solid #ced4da; border-right: 1px solid #ced4da; border-bottom: 1px solid #ced4da; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;">
+                    @foreach (var item in temporaryFileURI)
+                    {
+                        <div class="d-inline-block text-center" style="width: 100px; height: 100px; position: relative;">
+                            <img src="@item" alt="Project image preview" width="100" height="100" style="opacity: 0.7" />
+                            <span style="position:absolute; top: 10px; right: 10px; color: red; font-size: 17px; cursor: pointer;" class="oi oi-trash" @onclick="() => RemoveFileAtIndex(temporaryFileURI.IndexOf(item))"></span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Zapisz</button>
+    </EditForm>
+</div>
+@code {
+    private CreateProjectCommand createProjectCommand = new();
+    private bool isLoading;
+    private int maxAllowedFiles = int.MaxValue;
+    private long maxFileSize = long.MaxValue;
+
+    private List<IBrowserFile> imageFiles = new();
+    private List<ExtendedFileMetadataDTO> filesMetadata = new();
+    private List<string> temporaryFileURI = new();
+    private IBrowserFile beforeImageFile;
+    private IBrowserFile afterImageFile;
+    private string beforeImageTemporaryUri;
+    private string afterImageTemporaryUri;
+
+    private List<string> errors = new();
+    private string baseUrl;
+
+    protected override void OnInitialized()
+    {
+        baseUrl = navigationManager.BaseUri;
+    }
+    private async Task OnBeforeImageSelect(InputFileChangeEventArgs args)
+    {
+        beforeImageFile = args.File;
+
+        var temporaryImage = await args.File.RequestImageFileAsync("image/jpg", 200, 200);
+
+        using Stream tempImageStream = temporaryImage.OpenReadStream(maxFileSize);
+
+        using MemoryStream ms = new();
+        await tempImageStream.CopyToAsync(ms);
+
+        beforeImageTemporaryUri = $"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}";
+    }
+
+    private async Task OnAfterImageSelect(InputFileChangeEventArgs args)
+    {
+        afterImageFile = args.File;
+
+        var temporaryImage = await args.File.RequestImageFileAsync("image/jpg", 200, 200);
+
+        using Stream tempImageStream = temporaryImage.OpenReadStream(maxFileSize);
+
+        using MemoryStream ms = new();
+        await tempImageStream.CopyToAsync(ms);
+
+        afterImageTemporaryUri = $"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}";
+    }
+
+    private async Task CreateAsync()
+    {
+        if (imageFiles != null && imageFiles.Any())
+        {
+            filesMetadata.Clear();
+
+            foreach (var file in imageFiles)
+            {
+                await UploadFileAsync(file, ImageTypeDTO.Normal);
+            }
+        }
+
+        if (beforeImageFile != null)
+        {
+            await UploadFileAsync(beforeImageFile, ImageTypeDTO.Before);
+        }
+
+        if (afterImageFile != null)
+        {
+            await UploadFileAsync(afterImageFile, ImageTypeDTO.After);
+        }
+
+        // createProjectCommand.VisitingCardImageUrl = temporaryFileURI.FirstOrDefault();
+
+        // if (createProjectCommand.VisitingCardImageUrl == null)
+        // {
+        //     createProjectCommand.VisitingCardImageUrl = "domyslny-obrazek.jpg";
+        // }
+
+        createProjectCommand.ImageFilesMetadata = filesMetadata;
+
+        Console.WriteLine($"Liczba plików w imageFiles w CreateAsync: {imageFiles.Count}");
+        var createdProject = await projectService.CreateProjectAsync(createProjectCommand);
+
+        if (createdProject != null)
+        {
+            navigationManager.NavigateTo("/projects/edit/" + createdProject.ProjectId, true);
+        }
+    }
+
+    private async Task OnFileSelect(InputFileChangeEventArgs args)
+    {
+        isLoading = true;
+
+        try
+        {
+            foreach (var file in args.GetMultipleFiles(maxAllowedFiles))
+            {
+                imageFiles.Add(file);
+
+                var temporaryImage = await file.RequestImageFileAsync("image/jpg", 200, 200);
+
+                using Stream tempImageStream = temporaryImage.OpenReadStream(maxFileSize);
+
+                using MemoryStream ms = new();
+                await tempImageStream.CopyToAsync(ms);
+
+                var base64Image = $"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}";
+
+                temporaryFileURI.Add(base64Image);
+
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        isLoading = false;
+        Console.WriteLine($"Liczba plików w imageFiles w CreateAsync: {imageFiles.Count}");
+    }
+
+
+    private async Task UploadFileAsync(IBrowserFile file, ImageTypeDTO imageType)
+    {
+        if (file == null)
+        {
+            throw new ArgumentNullException("File not found");
+        }
+
+        if (file.Size > maxFileSize)
+        {
+            return;
+        }
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+
+            var uploadFileDTO = new UploadFileDTO()
+                {
+                    FileName = file.Name,
+                    ContentType = file.ContentType,
+                    FileSize = file.Size,
+                    Content = memoryStream.ToArray(),
+                };
+
+            var uploadOptionsDTO = new FileUploadOptionsDTO
+                {
+                    Code = FilePathCodeEnum.PROJECT
+                };
+
+            var uploadResult = await fileHandlerService.UploadFileAsync(uploadFileDTO, uploadOptionsDTO);
+
+            if (uploadResult != null && uploadResult.IsSuccess)
+            {
+                var fullUrl = $"{baseUrl}{uploadResult.FileRelativePath.Replace('\\', '/')}";
+                var createResult = await fileHandlerService.CreateFileMetadataAsync(new CreateFileMetadataCommand()
+                    {
+                        FileName = file.Name,
+                        ContentType = file.ContentType,
+                        FileSize = file.Size,
+                        FileFullPath = uploadResult.FileFullPath,
+                        FileRelativePath = fullUrl,
+                        FileExtension = Path.GetExtension(uploadResult.FileRelativePath),
+                    });
+
+                if (createResult != null)
+                {
+                    createResult.ImageType = imageType;
+                    filesMetadata.Add(createResult);
+                }
+            }
+            else
+            {
+                errors.Add(uploadResult?.ErrorMessage ?? "There was an error during file upload. Try again.");
+            }
+        }
+        catch (Exception ex)
+        {
+            errors.Add(ex.Message);
+        }
+    }
+
+    private void RemoveFileAtIndex(int index)
+    {
+        temporaryFileURI.RemoveAt(index);
+        imageFiles.RemoveAt(index);
+    }
+    private void RemoveBefore()
+    {
+        beforeImageTemporaryUri = string.Empty;
+
+        beforeImageFile = null;
+    }
+    private void RemoveAfter()
+    {
+        afterImageTemporaryUri = string.Empty;
+        afterImageFile = null;
+    }
+}

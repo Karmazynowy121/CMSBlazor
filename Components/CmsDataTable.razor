@@ -1,0 +1,11 @@
+@inherits ComponentBase
+
+<table class="table cms-data-table @ClassName">
+  @ChildContent
+</table>
+
+
+@code{
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public string ClassName { get; set; }
+}

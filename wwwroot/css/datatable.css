@@ -1,0 +1,118 @@
+.cms-data-table th {
+  width: min-content;
+  color: white;
+
+  font-size: .8rem;
+  font-weight: 600;
+
+  background-color: var(--primary-color);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.cms-data-table td {
+  cursor: pointer;
+
+  font-size: .8rem;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+.cms-data-table td, tr {
+  text-align: center;
+}
+
+.cms-data-table tr:hover {
+  background-color: rgba(0,0,0, .09);
+}
+
+.table.cms-data-table th.error-col {
+  width: 50px;
+  background-color: var(--dangerous-color);
+}
+
+.cms-data-table td.error-col {
+  min-width: 50px;
+  width: 50px;
+  color: transparent;
+
+  /* background-image: url('images/icon-triangle.png'); */
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.cms-data-table td.error-col.error-find {
+  color: white;
+
+  /* background-image: url('images/error-icon-triangle.png'); */
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.cms-data-table .action-col {
+  display: flex;
+  flex-direction: row;
+}
+
+.cms-data-table .link {
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.cms-data-table .link.details {
+  color: var(--primary-color);
+}
+
+.cms-data-table .link.edit {
+  color: #0F9AFF;
+}
+
+.cms-data-table .link.delete {
+  color: var(--dangerous-color);
+}
+
+.cms-data-table .table-element {
+  position: relative;
+}
+
+.cms-data-table .table-element.show {
+  background-color: rgba(0,0,0, .09);
+}
+
+.cms-data-table .hide-table-container table {
+  margin-bottom: 0;
+}
+
+.cms-data-table .hide-table-container tr:last-child {
+  border-bottom: transparent;
+}
+
+.cms-data-table tr.hide-table-container td {
+  padding: 0;
+}
+
+.cms-data-table tr.hide-table-container td.hide-table-td-container {
+  padding-left: 50px;
+}
+
+.cms-data-table .subtable-header th {
+  background-color: #36195A;
+}
+
+.cms-data-table tr.hide-table-container:hover  {
+  background-color: transparent;
+}
+
+.cms-data-table .hide-table-container:hover tr {
+  background-color: transparent;
+}
+
+.cms-data-table td.form-check.checbox-container {
+  padding: 0;
+}
+
+.cms-data-table .empty-col {
+  padding: 0;
+  background-color: transparent;
+}

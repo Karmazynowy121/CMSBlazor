@@ -1,0 +1,147 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = Cms.Web
+build_property.RootNamespace = Cms.Web
+build_property.ProjectDir = D:\githubcurse\CMS\Cms.Web\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = D:\githubcurse\CMS\Cms.Web
+build_property._RazorSourceGeneratorDebug = 
+
+[D:/githubcurse/CMS/Cms.Web/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Components/CmsDataTable.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDbXNEYXRhVGFibGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Components/RedirectToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSZWRpcmVjdFRvTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Blog/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQmxvZ1xJbmRleC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/CompanyReview/Create.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcGFueVJldmlld1xDcmVhdGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/CompanyReview/Edit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcGFueVJldmlld1xFZGl0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/CompanyReview/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcGFueVJldmlld1xJbmRleC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/CompanyReview/List.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcGFueVJldmlld1xMaXN0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Project/Create.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvamVjdFxDcmVhdGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Project/Edit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvamVjdFxFZGl0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Project/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvamVjdFxJbmRleC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Project/List.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvamVjdFxMaXN0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Shared/SurveyPrompt.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFN1cnZleVByb21wdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Components/ButtonContainer.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xCdXR0b25Db250YWluZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-5eqb6hxnls
+
+[D:/githubcurse/CMS/Cms.Web/Components/Buttons/MainBtn.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xCdXR0b25zXE1haW5CdG4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-i3o2wd6lbt
+
+[D:/githubcurse/CMS/Cms.Web/Components/PageHeader.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlSGVhZGVyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-64i26vhg27
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Blog/CreateEdit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQmxvZ1xDcmVhdGVFZGl0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-83lkysyoir
+
+[D:/githubcurse/CMS/Cms.Web/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-aua47v1mm6
+
+[D:/githubcurse/CMS/Cms.Web/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-oj8sz26fz8
+
+[D:/githubcurse/CMS/Cms.Web/Areas/Identity/Pages/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Areas/Identity/Pages/Account/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxfVmlld0ltcG9ydHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Areas/Identity/Pages/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZhbGlkYXRpb25TY3JpcHRzUGFydGlhbC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Areas/Identity/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Areas/Identity/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Shared/_LoginPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9Mb2dpblBhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/githubcurse/CMS/Cms.Web/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 

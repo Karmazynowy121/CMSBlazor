@@ -1,0 +1,214 @@
+﻿@page "/companyreview/edit/{CompanyReviewId:int}"
+<PageTitle>Edytuj recenzję</PageTitle>
+
+@using Cms.Application.CQRS.Commands.FileMetadata
+@using Cms.Application.CQRS.Commands.CompanyReview
+@using Cms.Application.CQRS.Queries.FileMetadataQuery
+@using Cms.Application.CQRS.Queries.CompanyReviewQuery
+@using Cms.Application.DTO
+@using Cms.Application.DataModules.DTO
+@using Cms.Application.Interfaces
+@using Cms.Domain.Entities
+@inject IFileHandlerService fileHandlerService
+@inject ICompanyReviewService companyReviewService
+@inject IJSRuntime JsRuntime
+@inject NavigationManager navigationManager
+
+<div style="background-color: white; border-radius: 10px; padding: 20px; box-shadow: 0 0 .875rem #29304314">
+    <h5 style="color: #495057">Edytowanie recenzji</h5>
+    <EditForm Model="@updateCompanyReviewCommand" class="mt-4" OnValidSubmit="@UpdateAsync">
+        <DataAnnotationsValidator />
+        <div class="mb-3 form-floating">
+            <InputTextArea id="Content" @bind-Value="updateCompanyReviewCommand.Content" class="form-control form-control-sm" placeholder="Opinia o Firmie" style="height: 250px;" />
+
+            <label class="mb-1" style="color: #6C757D;" for="Content">Opis</label>
+            <ValidationMessage For="() => updateCompanyReviewCommand.Content" />
+        </div>
+        <div class="form-group">
+            <label class="mb-1" style="color: #6C757D;" for="Files">Zdjęcia recenzji</label>
+            <InputFile multiple="true" OnChange="@OnFileSelect" id="Files" class="form-control form-control-sm hidden" accept=".png,.jpg,.jpeg" />
+        </div>
+        <div class="d-flex">
+            @if (isLoading)
+            {
+                <span class="d-block mt-2">Trwa ładowanie zdjęć</span>
+            }
+            else if (temporaryFileURI?.Any() == true || reviewDTO.Images?.Any() == true)
+            {
+                <div class="d-flex gap-2 w-100" style="padding: 20px; border-left: 1px solid #ced4da; border-right: 1px solid #ced4da; border-bottom: 1px solid #ced4da; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;">
+                    @foreach (var item in reviewDTO.Images)
+                    {
+                        <div class="d-inline-block text-center" style="width: 100px; height: 100px; position: relative;">
+                            <img src="@item.ImageUrl" alt="Review image preview" width="100" height="100" style="opacity: 0.7" />
+                            <span style="position:absolute; top: 10px; right: 10px; color: red; font-size: 17px; cursor: pointer;" class="oi oi-trash" @onclick="() => DeleteFileFromReview(item.CompanyReviewImageId)"></span>
+                        </div>
+                    }
+                    @foreach (var item in temporaryFileURI)
+                    {
+                        <div class="d-inline-block text-center" style="width: 100px; height: 100px; position: relative;">
+                            <img src="@item" alt="Review image preview" width="100" height="100" style="opacity: 0.7" />
+                            <span style="position:absolute; top: 10px; right: 10px; color: red; font-size: 17px; cursor: pointer;" class="oi oi-trash" @onclick="() => RemoveFileAtIndex(temporaryFileURI.IndexOf(item))"></span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Zapisz</button>
+    </EditForm>
+</div>
+@code {
+    [Parameter]
+    public int CompanyReviewId {get; set;}
+
+    private UpdateCompanyReviewCommand updateCompanyReviewCommand = new();
+
+    private CompanyReviewDTO reviewDTO = new()
+        {
+            Images = new List<CompanyReviewImageDTO>()
+        };
+
+    private bool isLoading;
+    private int maxAllowedFiles = int.MaxValue;
+    private long maxFileSize = long.MaxValue;
+
+    private List<IBrowserFile> imageFiles = new();
+    private List<ExtendedFileMetadataDTO> filesMetadata = new();
+    private List<string> temporaryFileURI = new();
+
+    private List<string> errors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        reviewDTO = await companyReviewService.GetCompanyReviewByIdAsync(CompanyReviewId);
+
+        if (reviewDTO != null)
+        {
+            updateCompanyReviewCommand.CompanyReviewId = CompanyReviewId;
+            updateCompanyReviewCommand.Content = reviewDTO.Content;
+        }
+    }
+
+    private async Task UpdateAsync()
+    {
+        if (imageFiles != null && imageFiles.Any())
+        {
+            filesMetadata.Clear();
+
+            foreach (var file in imageFiles)
+            {
+                await UploadFileAsync(file);
+            }
+        }
+
+        updateCompanyReviewCommand.ImageFilesMetadata = filesMetadata;
+
+        await companyReviewService.UpdateCompanyReviewAsync(updateCompanyReviewCommand);
+
+        navigationManager.NavigateTo("/companyreviews/edit/" + updateCompanyReviewCommand.CompanyReviewId, true);
+    }
+
+    private async Task OnFileSelect(InputFileChangeEventArgs args)
+    {
+        isLoading = true;
+
+        try
+        {
+            foreach (var file in args.GetMultipleFiles(maxAllowedFiles))
+            {
+                imageFiles.Add(file);
+
+                var temporaryImage = await file.RequestImageFileAsync("image/jpg", 200, 200);
+
+                using Stream tempImageStream = temporaryImage.OpenReadStream(maxFileSize);
+
+                using MemoryStream ms = new();
+                await tempImageStream.CopyToAsync(ms);
+
+                temporaryFileURI.Add($"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}");
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        isLoading = false;
+    }
+
+    private async Task UploadFileAsync(IBrowserFile file)
+    {
+        if (file == null)
+        {
+            throw new ArgumentNullException("File not found");
+        }
+
+        if (file.Size > maxFileSize)
+        {
+            return;
+        }
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+
+            var uploadFileDTO = new UploadFileDTO()
+                {
+                    FileName = file.Name,
+                    ContentType = file.ContentType,
+                    FileSize = file.Size,
+                    Content = memoryStream.ToArray(),
+                    FilePathDTO = new FilePathDTO()
+                    {
+                        Code = "COMPANY_REVIEW"
+                    }
+                };
+
+            var uploadResult = await fileHandlerService.UploadFileAsync(uploadFileDTO, new() {
+                Code = FilePathCodeEnum.COMPANYREVIEW
+            });
+
+            if (uploadResult != null && uploadResult.IsSuccess)
+            {
+                var createResult = await fileHandlerService.CreateFileMetadataAsync(new CreateFileMetadataCommand()
+                    {
+                        FileName = file.Name,
+                        ContentType = file.ContentType,
+                        FileSize = file.Size,
+                        FileFullPath = uploadResult.FileFullPath,
+                        FileRelativePath = uploadResult.FileRelativePath,
+                        FileExtension = Path.GetExtension(uploadResult.FileRelativePath)
+                    });
+
+                if (createResult != null)
+                {
+                    filesMetadata.Add(createResult);
+                }
+            }
+            else
+            {
+                errors.Add(uploadResult?.ErrorMessage ?? "There was an error during file upload. Try again.");
+            }
+        }
+        catch (Exception ex)
+        {
+            errors.Add(ex.Message);
+        }
+    }
+
+    private void RemoveFileAtIndex(int index)
+    {
+        temporaryFileURI.RemoveAt(index);
+        imageFiles.RemoveAt(index);
+    }
+
+    private async Task DeleteFileFromReview(int companyReviewImageId)
+    {
+        bool deleteConfirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Czy chcesz usunąć istniejące zdjęcie z recenzji?");
+        if (deleteConfirmed)
+        {
+            await companyReviewService.DeleteCompanyReviewAsync(companyReviewImageId);
+            reviewDTO.Images.Remove(reviewDTO.Images.FirstOrDefault(x => x.CompanyReviewImageId == companyReviewImageId));
+        }
+    }
+}

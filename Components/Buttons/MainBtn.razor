@@ -1,0 +1,17 @@
+
+@{
+
+    var btnAdditionalClass = IsPrimary ? "btn-primary" : "btn-seccondary";
+
+    <button type="@ButtonType" class="btn @btnAdditionalClass  @ClassName" 
+        @onclick="() => OnClickHandler?.Invoke()" >@TextValue</button>
+}
+
+
+@code{
+    [Parameter] public Action OnClickHandler { get; set; }
+    [Parameter] public bool IsPrimary { get; set; } = true;
+    [Parameter] public string ButtonType { get; set; } = "button";
+    [Parameter] public string ClassName { get; set; }
+    [Parameter] public string TextValue { get; set; }
+}

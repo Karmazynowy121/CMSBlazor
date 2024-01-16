@@ -1,0 +1,10 @@
+@inherits ComponentBase
+
+<div class="button-container @ClassName" >
+  @ChildContent
+</div>
+
+@code{
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public string ClassName { get; set; }
+}
